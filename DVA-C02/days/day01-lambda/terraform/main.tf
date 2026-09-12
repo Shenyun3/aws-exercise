@@ -4,7 +4,8 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      # 使用 6.x 的新版本，以支持教程选择的 Node.js 24 运行时。
+      version = "~> 6.0"
     }
     archive = {
       source  = "hashicorp/archive"
@@ -56,15 +57,19 @@ data "archive_file" "lambda_zip" {
 
 # 3. 对应 Console 创建 Lambda 函数各项配置
 resource "aws_lambda_function" "demo_function" {
-  function_name = "dva-lab-day1-context"
-  role          = aws_iam_role.lambda_exec_role.arn
-  runtime       = "nodejs20.x"
-  handler       = "index.handler"
-  filename      = data.archive_file.lambda_zip.output_path
+  function_name    = "dva-lab-day1-context"
+  role             = aws_iam_role.lambda_exec_role.arn
+  runtime          = "nodejs24.x"
+  architectures    = ["x86_64"]
+  handler          = "index.handler"
+  filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
-  timeout     = 15      # 超时限制（秒）
-  memory_size = 128     # 内存大小（MB），同时按比例分配 CPU
+  timeout     = 15  # 本实验选 15 秒；常规函数上限是 900 秒
+  memory_size = 128 # 内存大小（MB），同时按比例分配 CPU
+
+  # 先完成日志策略绑定；不配置 VPC 或付费的 Provisioned Concurrency。
+  depends_on = [aws_iam_role_policy_attachment.lambda_basic_logs]
 
   # 对应 Console 中的 Environment variables
   environment {

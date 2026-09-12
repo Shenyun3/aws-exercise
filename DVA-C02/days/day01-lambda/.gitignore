@@ -1,0 +1,8 @@
+# 实验响应可能包含请求信息，不作为教材源码提交。
+outputs/
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfplan
+terraform/lambda.zip
+terraform/crash.log
